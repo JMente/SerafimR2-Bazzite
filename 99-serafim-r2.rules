@@ -1,0 +1,22 @@
+# Serafim R2+ Racing Wheel — udev rules para Bazzite
+# Hardware: ShanWan Android GamePad (2563:0526)
+# Propósito: Forzar identificación como joystick y dar permisos correctos
+
+# 1. Asegurar que se reconoce como joystick
+SUBSYSTEM=="input", ATTRS{idVendor}=="2563", ATTRS{idProduct}=="0526", \
+    ENV{ID_INPUT_JOYSTICK}="1", \
+    ENV{ID_INPUT_MOUSE}="", \
+    ENV{ID_INPUT_KEYBOARD}="", \
+    ENV{ID_INPUT_TABLET}=""
+
+# 2. Dar permisos de lectura/escritura al grupo input
+SUBSYSTEM=="input", ATTRS{idVendor}=="2563", ATTRS{idProduct}=="0526", \
+    MODE="0660", GROUP="input"
+
+# 3. También para hidraw (acceso HIDAPI de Steam)
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="2563", ATTRS{idProduct}=="0526", \
+    MODE="0660", GROUP="input", TAG+="uaccess"
+
+# 4. Etiqueta para acceso de usuario (systemd-logind)
+SUBSYSTEM=="input", ATTRS{idVendor}=="2563", ATTRS{idProduct}=="0526", \
+    TAG+="uaccess"
