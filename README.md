@@ -268,19 +268,58 @@ journalctl --user -u serafim-bridge -f
 
 ### Drift o botones fantasmas
 
-Este problema ocurría en versiones anteriores donde el dispositivo virtual usaba VID:PID similar al real (`2563:0527`). La solución actual usa **VID:PID de Xbox 360** (`045E:028E`) para evitar que Steam Input aplique mapeos incorrectos del "Android GamePad".
+Este problema ocurre cuando **Steam Input aplica un mapeo incorrecto** (ej. PS3) en lugar del mapeo Xbox 360 nativo. Esto suele pasar si había configuraciones antiguas del dispositivo real (`2563:0526`) o del virtual anterior (`2563:0527`).
 
-Si persisten problemas:
-1. Verifica que estés usando la última versión del script
-2. Borra configuraciones de Steam Input antiguas:
-   ```bash
-   rm ~/.local/share/Steam/steamapps/common/Steam\ Controller\ Configs/*/config/configset_2563-*.vdf
-   ```
-3. Reinicia Steam
+**Síntomas:**
+- El volante se mueve solo (drift)
+- Botones se activan sin presionarlos
+- El juego muestra íconos de PS3 (△○×□) en lugar de Xbox (ABXY)
+
+**Solución:**
+
+```bash
+# 1. Detener el bridge
+systemctl --user stop serafim-bridge
+
+# 2. Borrar configuraciones antiguas de Steam Input
+rm -f ~/.local/share/Steam/steamapps/common/Steam\ Controller\ Configs/*/config/configset_2563-*.vdf
+rm -f ~/.local/share/Steam/steamapps/common/Steam\ Controller\ Configs/*/config/preferences_2563-*.vdf
+rm -rf ~/.local/share/Steam/steamapps/common/Steam\ Controller\ Configs/*/config/[0-9]*/
+
+# 3. Reiniciar el bridge
+systemctl --user start serafim-bridge
+
+# 4. Reiniciar Steam completamente
+# 5. En el juego, selecciona perfil "Gamepad" o "Xbox Controller"
+#    NO selecciones "PS3" ni "Generic"
+```
+
+> **Nota:** El bridge actual usa VID:PID de Xbox 360 Controller (`045E:028E`) para que Steam aplique el mapeo correcto automáticamente. Si usaste una versión anterior del bridge con VID:PID `2563:0527`, es probable que Steam tenga configs antiguas que causen conflicto.
+
+### Forza Horizon 5 no detecta el volante
+
+Forza Horizon 5 usa **Easy Anti-Cheat** que puede bloquear dispositivos de input virtuales.
+
+**Solución:** Desactivar Steam Input solo para Forza 5:
+```
+Click derecho en Forza 5 → Propiedades → Controlador → "Desactivar Steam Input"
+```
+
+Luego añade en Launch Options:
+```
+SDL_JOYSTICK_DEVICE=/dev/input/js1 %command%
+```
+
+(Reemplaza `js1` por el joystick de tu dispositivo virtual)
 
 ---
 
 ## 📝 Changelog
+
+### v1.2 (2025-05-23)
+- **Fix:** Documentación expandida con solución para drift/botones fantasmas causados por configs antiguas de Steam Input
+- **Fix:** Sección de troubleshooting para Forza Horizon 5 (Easy Anti-Cheat)
+- **Mejora:** Instrucciones detalladas para limpiar configuraciones de Steam Input
 
 ### v1.1 (2025-05-23)
 - **Fix:** Cambiado VID:PID del dispositivo virtual a Xbox 360 Controller (`045E:028E`)
